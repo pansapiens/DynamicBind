@@ -85,6 +85,7 @@ parser.add_argument('--keep_local_structures', action='store_true', default=Fals
 parser.add_argument('--protein_dynamic', action='store_true', default=False, help='Use no noise in the final step of the reverse diffusion')
 parser.add_argument('--relax', action='store_true', default=False, help='Use no noise in the final step of the reverse diffusion')
 parser.add_argument('--use_existing_cache', action='store_true', default=False, help='Use existing cache file, if they exist.')
+parser.add_argument('--no_gpu', action='store_true', default=False, help='Force CPU-only execution, even if a GPU is available.')
 
 
 args = parser.parse_args()
@@ -116,7 +117,7 @@ if args.confidence_model_dir is not None:
     with open(f'{args.confidence_model_dir}/model_parameters.yml') as f:
         confidence_args = Namespace(**yaml.full_load(f))
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda' if torch.cuda.is_available() and not args.no_gpu else 'cpu')
 
 if args.protein_ligand_csv is not None:
     df = pd.read_csv(args.protein_ligand_csv)

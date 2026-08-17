@@ -21,3 +21,8 @@ ENV/
 dist/
 build/
 ipynb_checkpoints/*.pyc
+/workdir/
+/esm_models/
+/results/
+data/cache_torsion/
+*.npy

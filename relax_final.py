@@ -16,6 +16,7 @@ from rdkit.Chem import MolToSmiles, MolFromSmiles, AddHs
 from Bio.PDB import PDBParser, MMCIFParser
 from Bio.PDB import Superimposer
 from Bio.PDB import PDBIO, Select,NeighborSearch
+import openmm
 from openmm import app as openmm_app
 
 from utils.relax import openmm_relax
@@ -25,8 +26,18 @@ parser = ArgumentParser()
 parser.add_argument('--results_path', type=str, default='results/user_inference', help='Directory where the outputs will be written to')
 parser.add_argument('--num_workers', type=int, default=20, help='Number of workers for creating the dataset')
 parser.add_argument('--samples_per_complex', type=int, default=1, help='Number of samples to generate')
+parser.add_argument('--no_gpu', action='store_true', default=False, help='Force CPU-only OpenMM relaxation, even if a CUDA platform is available.')
 
 args = parser.parse_args()
+
+def cuda_platform_available():
+    try:
+        openmm.Platform.getPlatformByName("CUDA")
+        return True
+    except Exception:
+        return False
+
+USE_GPU = (not args.no_gpu) and cuda_platform_available()
 
 from rdkit.Chem.rdmolfiles import MolToPDBBlock, MolToPDBFile
 import rdkit.Chem
@@ -532,7 +543,7 @@ if __name__ == '__main__':
             stiffness, ligand_stiffness = 1000, 3000
             relaxed_complexFile = relaxed_proteinFile.replace("_receptor_", "_complex_")
             relaxed_ligandFile = os.path.join(write_dir, ligand_file_name.replace('.sdf','_relaxed.sdf'))
-            use_gpu = True
+            use_gpu = USE_GPU
             x = (ref_proteinFile, ref_ligandFile, pdbFile, ligandFile, fixed_pdbFile, relaxed_proteinFile, gap_mask, stiffness, ligand_stiffness, relaxed_complexFile, relaxed_ligandFile, use_gpu)
             input_.append(x)
             idx += 1
